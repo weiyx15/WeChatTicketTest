@@ -159,7 +159,8 @@ mysql> select * from wechat_user;
 
 ## 单元测试
 ### 测试范围
-`adminpage/views.py`中的各个类
+`adminpage/views.py`中的各个类  
+![test_classes](md_imgs/test_classes.png)
 ### 管理员登录
 
 ### 管理员登出
@@ -178,7 +179,7 @@ mysql> select * from wechat_user;
 
 
 ## 功能测试
-### 测试范围（需要进行功能测试的url加粗表示）
+### 测试范围
 ```python
 urlpatterns = [
     url(r'^login/?$', AdminLoginView.as_view()),
@@ -193,6 +194,69 @@ urlpatterns = [
 ]
 ```
 ### 管理员登录
+#### 测试用例
+1. 正确用户名 + 正确密码
+2. 错误用户名
+3. 正确用户名 + 错误密码
+#### 测试代码
+```python
+class AdminLoginViewTest(FunctionTestWrapper):
+    def test_valid_login(self):
+        self.browser.get('http://127.0.0.1:8000/a/login')
+        inputUserName = self.browser.find_element_by_id('inputUsername')
+        inputPassword = self.browser.find_element_by_id('inputPassword')
+        loginnow = self.browser.find_element_by_id('loginnow')
+
+        inputUserName.clear()
+        inputUserName.send_keys('root')
+
+        inputPassword.clear()
+        inputPassword.send_keys('!root123')
+
+        loginnow.click()
+        time.sleep(2)
+
+        self.assertEqual(self.browser.title, '活动列表 - 紫荆之声')     # check if jump to activity list page
+
+        cookies = self.browser.get_cookies()
+
+        with open('admin_cookies.json', 'w') as f:
+            json.dump(cookies, f)
+
+    def test_invalid_username(self):
+        self.browser.get('http://127.0.0.1:8000/a/login')
+        inputUserName = self.browser.find_element_by_id('inputUsername')
+        inputPassword = self.browser.find_element_by_id('inputPassword')
+        loginnow = self.browser.find_element_by_id('loginnow')
+
+        inputUserName.clear()
+        inputUserName.send_keys('weiyx')
+
+        inputPassword.clear()
+        inputPassword.send_keys('!root123')
+
+        loginnow.click()
+
+        self.assertEqual(self.browser.find_element_by_id('alert').text, '用户名或密码错误')
+
+    def test_wrong_password(self):
+        self.browser.get('http://127.0.0.1:8000/a/login')
+        inputUserName = self.browser.find_element_by_id('inputUsername')
+        inputPassword = self.browser.find_element_by_id('inputPassword')
+        loginnow = self.browser.find_element_by_id('loginnow')
+
+        inputUserName.clear()
+        inputUserName.send_keys('root')
+
+        inputPassword.clear()
+        inputPassword.send_keys('root')
+
+        loginnow.click()
+
+        self.assertEqual(self.browser.find_element_by_id('alert').text, '用户名或密码错误')
+```
+#### 测试结果
+![AdminLoginViewTest](md_imgs/AdminLoginTest.png)
 
 ### 管理员登出
 
