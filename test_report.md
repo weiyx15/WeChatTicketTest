@@ -198,6 +198,7 @@ urlpatterns = [
 1. 正确用户名 + 正确密码
 2. 错误用户名
 3. 正确用户名 + 错误密码
+- 注：在正确登录的测试用例中保存cookie信息到本地文件，之后测试需要登录的页面时从本地文件加载cookie即可
 #### 测试代码
 ```python
 class AdminLoginViewTest(FunctionTestWrapper):
@@ -257,12 +258,111 @@ class AdminLoginViewTest(FunctionTestWrapper):
 ```
 #### 测试结果
 ![AdminLoginViewTest](md_imgs/AdminLoginTest.png)
+### 创建活动
+#### 测试用例
+根据等价类划分法构造表单测试用例，分别测试“提交”“暂存”“重置”功能，重点各种非法输入
+#### 测试代码
+```python
+class ActivityListTest(FunctionTestWrapper):
+    def setUp(self) -> None:
+        self.browser = webdriver.Firefox()
+        self.browser.get('http://127.0.0.1:8000/a/activity/detail?create=1')
 
+        self.browser.delete_all_cookies()
+        with open('admin_cookies.json', 'r', encoding='utf-8') as f:
+            cookies = json.load(f)
+        for cookie in cookies:
+            self.browser.add_cookie({
+                'name': cookie['name'],
+                'value': cookie['value']
+            })
+
+        self.browser.get('http://127.0.0.1:8000/a/activity/detail?create=1')
+        time.sleep(.5)
+
+        inputName = self.browser.find_element_by_id('input-name')
+        inputName.clear()
+        inputName.send_keys('faust')
+        time.sleep(.5)
+
+        inputKey = self.browser.find_element_by_id('input-key')
+        inputKey.clear()
+        inputKey.send_keys('faust')
+        time.sleep(.5)
+
+        inputPlace = self.browser.find_element_by_id('input-place')
+        inputPlace.clear()
+        inputPlace.send_keys('assembly hall')
+        time.sleep(.5)
+
+        inputDescription = self.browser.find_element_by_id('input-description')
+        inputDescription.clear()
+        inputDescription.send_keys('very good')
+        time.sleep(.5)
+
+        inputPicUrl = self.browser.find_element_by_id('input-pic_url')
+        inputPicUrl.clear()
+        inputPicUrl.send_keys('''https://img-blog.csdnimg.cn/20190504232138969.PNG?x-oss-process=image/watermark,
+                type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2RhX2thb19sYQ==,size_16,color_FFFFFF,
+                t_70''')
+        time.sleep(.5)
+
+        inputTotalTickets = self.browser.find_element_by_id('input-total_tickets')
+        inputTotalTickets.clear()
+        inputTotalTickets.send_keys('1000')
+        time.sleep(.5)
+
+        self.timeList = list()
+        for field0 in ('start', 'end', 'book-start', 'book-end'):
+            tmpList = list()
+            for field1 in ('year', 'month', 'day', 'hour', 'minute'):
+                tmpList.append(self.browser.find_element_by_id('input-{}-{}'.format(field0, field1)))
+            self.timeList.append(tmpList)
+        self.inputTuple = ('2019', '10', '2', '0', '0', '2019', '10', '2', '1', '0', '2019', '10', '1', '0', '0',
+                      '2019', '10', '1', '12', '0')
+        idx = 0
+        for tmpList in self.timeList:
+            for val in tmpList:
+                val.clear()
+                val.send_keys(self.inputTuple[idx])
+                idx += 1
+                time.sleep(.5)
+
+    def test_save(self):
+        saveBtn = self.browser.find_element_by_id('saveBtn')
+        saveBtn.click()
+
+        idx = 0
+        for field0 in ('start', 'end', 'book-start', 'book-end'):
+            for field1 in ('year', 'month', 'day', 'hour', 'minute'):
+                self.assertEqual(self.browser.find_element_by_id('input-{}-{}'.format(field0, field1)).get_attribute('value'),
+                                 self.inputTuple[idx])
+                idx += 1
+
+    def test_submit(self):
+        publishBtn = self.browser.find_element_by_id('publishBtn')
+        publishBtn.click()
+        time.sleep(1)
+
+        self.assertIsNotNone(self.browser.find_element_by_id('resultHolder'))
+
+    def test_reset(self):
+        resetBtn = self.browser.find_element_by_id('resetBtn')
+        resetBtn.click()
+        time.sleep(.5)
+
+        self.assertEqual(self.browser.find_element_by_id('input-name').get_attribute('value'), '')
+```
+#### 测试结果
+1. 暂存或重置表单后部分字段被置为"disabled"无法修改
+2. 提交表单后“返回修改”回到填写表单页面部分字段被置为"disabled"无法修改
+3. 时间约束不正确（活动开始/结束时间与抢票开始/结束时间的关系）
+- 注：之后的几项测试仅展示测试结果
 ### 管理员登出
 
 ### 活动列表
 
-### 创建活动
+
 
 ### 删除活动
 
