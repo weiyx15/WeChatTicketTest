@@ -159,24 +159,33 @@ mysql> select * from wechat_user;
 
 ## 单元测试
 ### 测试范围
-`adminpage/views.py`中的各个类  
+`adminpage/views.py`中的各个视图是否能按照`adminpage/urls.py`里的路径正确访问  
 ![test_classes](md_imgs/test_classes.png)
-### 管理员登录
+### 测试代码
+```python
+class UrlUnitTest(TestCase):
+    def test_login_url(self):
+        response = self.client.get('/a/login/')
+        self.assertEqual(response.status_code, 200)
 
-### 管理员登出
+    def test_activity_list_url(self):
+        response = self.client.get('/a/activity/list')
+        self.assertEqual(response.status_code, 200)
 
-### 活动列表
+    def test_acitivity_detail_url(self):
+        response = self.client.get('/a/activity/detail?create=1')
+        self.assertEqual(response.status_code, 200)
 
-### 创建活动
+    def test_acitivity_menu_url(self):
+        response = self.client.get('/a/activity/menu')
+        self.assertEqual(response.status_code, 200)
 
-### 删除活动
-
-### 抢票菜单
-
-### 图片上传
-
-### 检票
-
+    def test_activity_checkin_url(self):
+        response = self.client.get('/a/activity/checkin')
+        self.assertEqual(response.status_code, 200)
+```
+### 测试结果
+登录、活动列表显示、新建活动、活动菜单、活动检票等页面可以正确访问
 
 ## 功能测试
 ### 测试范围
@@ -356,21 +365,26 @@ class ActivityListTest(FunctionTestWrapper):
 #### 测试结果
 1. 暂存或重置表单后部分字段被置为"disabled"无法修改
 2. 提交表单后“返回修改”回到填写表单页面部分字段被置为"disabled"无法修改
-3. 时间约束不正确（活动开始/结束时间与抢票开始/结束时间的关系）
-- 注：之后的几项测试仅展示测试结果
+3. 提交表单后“返回修改”回到填写表单页面部分字段提交结果无效（显示字段xx未填写）
+4. 提交表单后“返回修改”回到填写表单页面后“重置”不起作用
+5. 时间约束不正确（活动开始/结束时间与抢票开始/结束时间的关系）
+6. 通过/a/activity/list的详情页进入创建活动页面后"提交"总是失败
+7. 通过/a/activity/list的详情页进入创建活动页面后"重置"不起作用
+- 注：之后的几项测试仅展示测试结果，测试步骤略
 ### 管理员登出
-
+可以正确登出
 ### 活动列表
-
-
-
+可以正确查看活动
 ### 删除活动
-
+可以正确删除活动
 ### 抢票菜单
-
+微信接口失效，无法抢票
+![book_bug](md_imgs/book_bug.png)
 ### 图片上传
-
+上传成功后“暂存”仍提示"please enter a url"
 ### 检票
+检票显示二维码页面js出错
+![checkin_bug](md_imgs/checkin_bug.png)
 
 
 
