@@ -79,3 +79,9 @@ active.bat
 
 # mac
 .DS_Store
+
+# reports
+*.pdf
+*.ppt
+*.pptx
+*.pptx*

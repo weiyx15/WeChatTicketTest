@@ -6,7 +6,6 @@
 
 - 单元测试
 - 功能测试
-- 性能测试
 
 ## 实验平台
 
@@ -72,7 +71,7 @@
 | urls.py     | 路由     |
 | views.py        | 视图         |
 
-### userpage/
+### adminpage/
 后台管理App  
 
 | File            | Description  |
@@ -158,10 +157,10 @@ mysql> select * from wechat_user;
 ```
 
 ## 单元测试
-### 测试范围
+### 路由测试
 `adminpage/views.py`中的各个视图是否能按照`adminpage/urls.py`里的路径正确访问  
 ![test_classes](md_imgs/test_classes.png)
-### 测试代码
+#### 测试代码
 ```python
 class UrlUnitTest(TestCase):
     def test_login_url(self):
@@ -184,8 +183,54 @@ class UrlUnitTest(TestCase):
         response = self.client.get('/a/activity/checkin')
         self.assertEqual(response.status_code, 200)
 ```
-### 测试结果
+#### 测试结果
 登录、活动列表显示、新建活动、活动菜单、活动检票等页面可以正确访问
+### 登录测试
+在测试数据库中新建虚拟管理员用户，使用Django框架test包提供的Client向`/api/a/login`发送post请求，测试登录api路由、合法登录、非法用户名和错误密码
+#### 测试代码
+```python
+class AdminLoginTest(TestCase):
+    """test admin login
+    """
+    def setUp(self):
+        User.objects.create_superuser('root', 'root@test.com', '!root123')
+
+    def test_login_url(self):
+        """url test
+        """
+        c = Client()
+        response = c.post('/api/a/login', {"username": "root", "password": "!root123"})
+        self.assertEqual(response.status_code, 200)
+
+    def test_valid_login(self):
+        """invalid username & password
+        """
+        c = Client()
+        response = c.post('/api/a/login', {"username": "root", "password": "!root123"})
+        response_content = response.content.decode()
+        response_content_dict = json.loads(response_content)
+        self.assertEqual(response_content_dict['code'], 0)
+
+    def test_valid_username(self):
+        """invalid username
+        """
+        c = Client()
+        response = c.post('/api/a/login', {"username": "weiyx", "password": "!root123"})
+        response_content = response.content.decode()
+        response_content_dict = json.loads(response_content)
+        self.assertEqual(response_content_dict['code'], 7)
+
+    def test_wrong_password(self):
+        """wrong password
+        """
+        admin_login = AdminLoginView()
+        admin_login.input = {}
+        admin_login.input['username'] = 'root'
+        admin_login.input['password'] = '123456'
+        self.assertRaises(PasswordError, admin_login.post)
+```
+#### 测试结果
+管理员登录视图实现正确
 
 ## 功能测试
 ### 测试范围
