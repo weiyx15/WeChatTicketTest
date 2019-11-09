@@ -6,14 +6,16 @@
 
 - 单元测试
 - 功能测试
+- 性能测试
 
 ## 实验平台
 
 - Ubuntu 16.0.4
 - Python 3.7.0
 - Django 1.9.13
-
 - Django Server
+- jdk 1.8
+- JMeter 5.2
 
 ## code review
 
@@ -93,7 +95,7 @@
 | ip    | 127.0.0.1 |
 | port  | 3306  |
 ### 生成数据表
-利用Django框架自动按照`./wecaht/models.py`生成数据表`wechat_activity`, `wechat_ticket `, `wechat_user`
+利用Django框架自动按照`./wecaht/models.py`生成数据表`wechat_activity`, `wechat_ticket`, `wechat_user`
 ```sql
 mysql> show tables;
 +----------------------------+
@@ -430,6 +432,33 @@ class ActivityListTest(FunctionTestWrapper):
 ### 检票
 检票显示二维码页面js出错
 ![checkin_bug](md_imgs/checkin_bug.png)
+
+## 性能测试
+对用户页的查看活动详情页接口`/api/u/activity/detail/?id=1`
+### 活动详情页测试
+使用JMeter测试之前，首先`python manage.py runserver`启动微信抢票服务
+#### 设置测试计划
+![AcitivityDetailTestPlan](md_imgs/ActivityDetail/ActivityDetailTestPlan.png)
+#### 设置线程组
+![AcitivityDetailThread](md_imgs/ActivityDetail/thread_group.png)
+#### 构造HTTP请求
+![AcitivityDetailRequest](md_imgs/ActivityDetail/ActivityDetailRequest.png)
+#### 修改线程数模拟并发
+- 100并发
+![AcitivityDetailThread](md_imgs/ActivityDetail/ActivityDetail100.png)
+- 1000并发
+![AcitivityDetailThread](md_imgs/ActivityDetail/ActivityDetail1000.png)
+- 10000并发
+![AcitivityDetailThread](md_imgs/ActivityDetail/ActivityDetail10000.png)
+- 100000并发
+![AcitivityDetailThread](md_imgs/ActivityDetail/ActivityDetail100000.png)
+注：受限于CPU性能瓶颈，100000并发实验运行3分钟后机器卡死，因此实验并没有跑完所有线程
+
+### 结论
+- 1000并发性能尚可
+- 无法支持10000以上并发
+- 性能测试的服务端和客户端都用同一台计算机模拟，JMeter线程组的计算和存储资源消耗较大，可能对服务器进程的资源产生影响，是该实验不太合理的地方
+
 
 
 
