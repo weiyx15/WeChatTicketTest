@@ -434,9 +434,45 @@ class ActivityListTest(FunctionTestWrapper):
 ![checkin_bug](md_imgs/checkin_bug.png)
 
 ## 性能测试
-对用户页的查看活动详情页接口`/api/u/activity/detail/?id=1`
-### 活动详情页测试
+### 微信抢票接口性能测试
+测试微信接口`/wechat/`  
 使用JMeter测试之前，首先`python manage.py runserver`启动微信抢票服务
+#### 设置测试计划
+![TestCase](md_imgs/QiangPiao/TestCase.png)
+#### 设置线程组
+![ThreadGroup](md_imgs/QiangPiao/ThreadGroup.png)
+#### 构造HTTP请求
+构造微信服务器转发给抢票系统后端服务器的请求报文body内容为如下XML:
+```xml
+<xml>
+<ToUserName><![CDATA[to]]></ToUserName>
+<FromUserName><![CDATA[to]]></FromUserName>
+<CreateTime>1448979874</CreateTime>
+<MsgType><![CDATA[text]]></MsgType>
+<Content><![CDATA[抢票]]></Content>
+<MsgId>1</MsgId>
+</xml>
+```
+将`settings.py`中的`IGNORE_WECHAT_SIGNATURE`字段置为True表示不启用签名验证
+```python
+IGNORE_WECHAT_SIGNATURE = True
+```
+![HTTPResponse](md_imgs/QiangPiao/HTTPRequest.png)
+#### 修改线程数模拟并发
+- 100并发
+![threads100](md_imgs/QiangPiao/threads100.png)
+- 1000并发
+![threads1000](md_imgs/QiangPiao/threads1000.png)
+- 10000并发
+![threads10000](md_imgs/QiangPiao/threads10000.png)
+
+#### 结论
+- 支持100并发时的99% Line在200ms以下，用户体验十分流畅
+- 可以支持1000并发，但1000并发时的99% Line在3秒以上，即部分抢票成功的用户需要3秒以上的时间才能收到反馈，可能对用户体验造成影响
+- 10000并发时错误率过高，无法支持10000并发
+
+### 活动详情页性能测试
+测试查看活动详情页接口`/api/u/activity/detail/?id=1`
 #### 设置测试计划
 ![AcitivityDetailTestPlan](md_imgs/ActivityDetail/ActivityDetailTestPlan.png)
 #### 设置线程组
@@ -454,11 +490,9 @@ class ActivityListTest(FunctionTestWrapper):
 ![AcitivityDetailThread](md_imgs/ActivityDetail/ActivityDetail100000.png)
 注：受限于CPU性能瓶颈，100000并发实验运行3分钟后机器卡死，因此实验并没有跑完所有线程
 
-### 结论
+#### 结论
 - 1000并发性能尚可
 - 无法支持10000以上并发
 - 性能测试的服务端和客户端都用同一台计算机模拟，JMeter线程组的计算和存储资源消耗较大，可能对服务器进程的资源产生影响，是该实验不太合理的地方
-
-
 
 
